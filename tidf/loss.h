@@ -3,10 +3,19 @@
 
 #include "matrix.h"
 
+#include <assert.h>
+
 namespace Loss {
     template <class T>
     Matrix<T> L1Loss(Matrix<T> x, Matrix<T> y) {
-        return;
+        assert(x.sameShape(y));
+        int N = x.col_size;
+        Matrix<T> sum(x.row_size, 1);
+        sum.fill((T)0);
+        for (int i = 0; i < N; i++) {
+            sum = sum + (x.col(i) - y.col(i));
+        }
+        return sum / N;
     }
 
     template <class T>

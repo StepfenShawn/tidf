@@ -22,11 +22,13 @@
 template <class T>
 class Matrix {
     private:
+        // we don't need cols
+        // because cols = (rows.T).rows
+        std::vector<std::vector<T> > rows;
+    public:
         std::vector<std::vector<T> > mat_arr;
         int row_size;
         int col_size;
-
-    public:
         // Constructors
         Matrix<T>(int row_size, int col_size);
         Matrix<T>(std::vector<std::vector<T> > const& mat_arr);
@@ -35,6 +37,9 @@ class Matrix {
         int getSizeOfRow() const { return this->row_size; }
         int getSizeOfCol() const { return this->col_size; }
         T get(int h, int w) const;
+
+        Matrix<T> col(size_t i) const;
+        Matrix<T> row(size_t i) const;
 
         // Apply function to each element in Matrix
         Matrix<T> apply(T (*function)(T)) const;
@@ -58,7 +63,11 @@ class Matrix {
         // Get the transpose of Matrix
         Matrix<T> transpose() const;
 
+        Matrix<T> join(const Matrix<T>& m) const;
+
         bool sameShape(const Matrix<T>& m) const;
+        T sum() const;
+        void fill(T value);
 };
 
 template <class T> Matrix<T> operator + (const Matrix<T>& a, const Matrix<T>& b);
@@ -66,11 +75,14 @@ template <class T> Matrix<T> operator - (const Matrix<T>& a, const Matrix<T>& b)
 template <class T> Matrix<T> operator * (T a, const Matrix<T>& m);
 template <class T> Matrix<T> operator * (const Matrix<T>& m, T a);
 
-// TODO: brandcast
 template <class T> Matrix<T> operator + (T a, Matrix<T>& m);
+template <class T> Matrix<T> operator + (Matrix<T>& m, T a);
 
 template <class T> std::ostream& operator << (std::ostream& flux, const Matrix<T>& m);
 template <class T> std::wostream& operator << (std::wostream& flux, const Matrix<T>& m);
+
+// connect 2 Matrixs
+template <class T> Matrix<T> operator >> (const Matrix<T>& a, const Matrix<T>& b);
 
 #endif /* _MATRIX_H_ */
 
@@ -90,6 +102,8 @@ Matrix<T>::Matrix(std::vector<std::vector<T> > const &mat_arr) {
     this->row_size = mat_arr.size();
     this->col_size = mat_arr[0].size();
     this->mat_arr = mat_arr;
+
+    this->rows = this->mat_arr;
 }
 
 template <class T>
@@ -132,12 +146,33 @@ std::wostream& operator << (std::wostream& flux, const Matrix<T>& m) {
     return flux;
 }
 
-template<class T>
+template <class T>
+Matrix<T> Matrix<T>::col(size_t i) const {
+    NEW_MAT(result, T, { this->transpose().mat_arr[i] });
+    return result;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::row(size_t i) const {
+    NEW_MAT(result, T, { this->mat_arr[i] });
+    return result;
+}
+
+template <class T>
 T Matrix<T>::get(int h, int w) const {
     if (!(h >= 0 && h < this->row_size && w > 0 && w < this->col_size)) {
         throw std::invalid_argument("Index out of bounds. ");
     }
     return this->mat_arr[h][w];
+}
+
+template <class T>
+void Matrix<T>::fill(T value) {
+    for (int i = 0; i < this->row_size; i++) {
+        for (int j = 0; j < this->col_size; j++) {
+            this->mat_arr[i][j] = value;
+        }
+    }
 }
 
 template <class T>
@@ -258,8 +293,41 @@ Matrix<T> Matrix<T>::dot(const Matrix<T>& m) const {
 }
 
 template <class T>
+Matrix<T> Matrix<T>::join(const Matrix<T>& m) const {
+    if (!(this->col_size == m.col_size))
+        throw std::invalid_argument("2 matrixs' col_size are not same. ");
+    std::vector<std::vector<T> > result_mat_arr{ this->mat_arr };
+    for (auto e : m.mat_arr){
+        result_mat_arr.push_back(e);
+    }
+    Matrix<T> result(result_mat_arr);
+    return result;
+}
+
+template <class T>
+T Matrix<T>::sum() const {
+    T sum = 0;
+    for (int i = 0; i < this->row_size; i++) {
+        for (int j = 0; j < this->col_size; j++) {
+            sum += this->mat_arr[i][j];
+        }
+    }
+    return sum;
+}
+
+template <class T>
 Matrix<T> operator + (const Matrix<T>& a, const Matrix<T>& b) {
     return a.add(b);
+}
+
+template <class T>
+Matrix<T> operator + (const Matrix<T>& m, T a) {
+    return m.apply([a](T x) -> T {return x + a;});
+}
+
+template <class T>
+Matrix<T> operator + (T a, const Matrix<T>& m) {
+    return m.apply([a](T x) -> T {return x + a;});
 }
 
 template <class T>
@@ -275,4 +343,9 @@ Matrix<T> operator * (const Matrix<T>& m, T a) {
 template <class T>
 Matrix<T> operator * (T a, const Matrix<T>& m) {
     return m.mul(a);
+}
+
+template <class T>
+Matrix<T> operator >> (const Matrix<T>& a, const Matrix<T>& b) {
+    return a.join(b);
 }

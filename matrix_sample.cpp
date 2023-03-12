@@ -7,5 +7,7 @@ int main() {
     std::cout << m1.dot(m2.transpose()) << std::endl;
     std::cout << m2 * 2.0 + m3 << std::endl;
     std::cout << m2.apply([](double x) -> double {return x * 10.0;}) << std::endl;
+    std::cout << m2.join(m3) << std::endl;
+    std::cout << m1.row(1).sum() << std::endl;
     return 0;
 }
