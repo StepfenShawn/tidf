@@ -6,9 +6,20 @@
 #include <vector>
 #include <stdexcept>
 #include <functional>
+#include <ctime>
+#include <cstdlib>
+
+#define randint(a, b) (rand() % (b - a) + a)
+#define random() (rand() / double(RAND_MAX))
+
+#define _RANDOM_INIT_ \
+    srand((int)time(NULL))
 
 #define NEW_MAT(name, type, value) \
         Matrix<type> name = Matrix<type>(std::vector<std::vector<type > > value )
+
+#define NEW_MAT_SIZE(name, type, shape) \
+        Matrix<type> name = Matrix<type> shape
 
 #define MAT_BLOCK(m, startRow, startCol, row_size, col_size) \
         ( m.Matblock(startRow, startCol, row_size, col_size) )
@@ -25,6 +36,8 @@ class Matrix {
         // we don't need cols
         // because cols = (rows.T).rows
         std::vector<std::vector<T> > rows;
+        Matrix<T> brandcast(Matrix<T> const& m) const;
+
     public:
         std::vector<std::vector<T> > mat_arr;
         int row_size;
@@ -40,6 +53,9 @@ class Matrix {
 
         Matrix<T> col(size_t i) const;
         Matrix<T> row(size_t i) const;
+
+        Matrix<T> addCol(Matrix<T>& newCol);
+        Matrix<T> addRow(Matrix<T>& newRow);
 
         // Apply function to each element in Matrix
         Matrix<T> apply(T (*function)(T)) const;
@@ -67,6 +83,8 @@ class Matrix {
 
         bool sameShape(const Matrix<T>& m) const;
         T sum() const;
+
+        Matrix<T> to_ramdom();        
         void fill(T value);
 };
 
@@ -235,12 +253,22 @@ bool Matrix<T>::sameShape(const Matrix<T>& m) const {
 
 template <class T>
 Matrix<T> Matrix<T>::add(const Matrix<T>& m) const {
-    if (!this->sameShape(m)) 
-        throw std::invalid_argument(" Matrix dimension must be the same!  ");
+    if (!this->sameShape(m)){
+        if (this->col_size == m.col_size || this->row_size == m.row_size) {
+            // if (this->col_size )
+        } else {
+            throw std::invalid_argument(" ValueError: frames are not aligned! ");
+        }
+    }
+    Matrix<T> m1 = m.brandcast(*this);
+    
+    if (!this->sameShape(m1))
+        throw std::invalid_argument(" Error: catched in brandcasting! ");
+
     Matrix<T> result(this->row_size, this->col_size);
     for (int i = 0; i < this->row_size; i++) {
         for (int j = 0; j < this->col_size; j++) {
-            result.mat_arr[i][j] = this->mat_arr[i][j] + m.mat_arr[i][j];
+            result.mat_arr[i][j] = this->mat_arr[i][j] + m1.mat_arr[i][j];
         }
     }
     return result;
@@ -248,7 +276,7 @@ Matrix<T> Matrix<T>::add(const Matrix<T>& m) const {
 
 template <class T>
 Matrix<T> Matrix<T>::sub(const Matrix<T>& m) const {
-    if (!this->sameShape(m)) 
+    if (!this->sameShape(m))
         throw std::invalid_argument(" Matrix dimension must be the same!  ");
     Matrix<T> result(this->row_size, this->col_size);
     for (int i = 0; i < this->row_size; i++) {
@@ -305,6 +333,33 @@ Matrix<T> Matrix<T>::join(const Matrix<T>& m) const {
 }
 
 template <class T>
+Matrix<T> Matrix<T>::addRow(Matrix<T>& newRow) {
+    return this->join(newRow);
+}
+
+template <class T>
+Matrix<T> Matrix<T>::addCol(Matrix<T>& newCol) {
+    return this->transpose().join(newCol).transpose();
+}
+
+template <class T>
+Matrix<T> Matrix<T>::brandcast(Matrix<T> const& m) const {
+    Matrix<T> result = *this;
+    if (this->col_size == m.col_size) {
+        Matrix<T> lastRow = this->row(this->row_size - 1);
+        for (int ii = 0; ii < m.row_size - this->row_size; ii++) {
+            result.join(lastRow);
+        }
+    } else if (this->row_size == m.row_size) {
+        Matrix<T> lastCol = this->col(this->col_size - 1);
+        for (int ii = 0; ii < m.col_size - this->col_size; ii++) {
+            result = result.transpose().join(lastCol).transpose();
+        }
+    }
+    return result;
+}
+
+template <class T>
 T Matrix<T>::sum() const {
     T sum = 0;
     for (int i = 0; i < this->row_size; i++) {
@@ -313,6 +368,11 @@ T Matrix<T>::sum() const {
         }
     }
     return sum;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::to_ramdom() {
+    return this->apply([](T x) -> T { return random(); });
 }
 
 template <class T>

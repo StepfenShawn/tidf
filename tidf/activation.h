@@ -3,8 +3,6 @@
 
 #include <cmath>
 
-#include "matrix.h"
-
 namespace Activation {
     
     template <class T>

@@ -1,6 +1,11 @@
 # Tidf
 [Wip] A tiny but fast deep-learning framework in c++.  
 
+# Why Tidf?
+* Powerful: provides a Keras-like api.
+* Simple and stupid: Support brandcast and made in pure c++11.
+* Tiny but fast: The implementation is under 1,000 semicolons.
+
 # Examples
 
 ### Matrix

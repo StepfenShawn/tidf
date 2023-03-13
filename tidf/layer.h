@@ -2,70 +2,76 @@
 #define _LAYER_H_
 
 #include "matrix.h"
+#include "activation.h"
 
+enum class LayerType {
+    Dense = 0,
+    Conval   
+};
+
+template <class T>
 class Layer {
     public:
-        // Creates layer.
-        Layer();
-};
-
-template <class T>
-class Dense : public Layer {
-    public:
-        Matrix<T> inputs;
-        Matrix<T>* weights;
-        Matrix<T>* bias;
-
-        Dense(int units, std::string activation);
-        Dense(int units, std::string activation, bool use_bias);
-
-
-    private:
+        int dims;
+        LayerType type;
         std::string activation;
-        bool use_bias;
+        Matrix<T> weights;
+        Matrix<T> bias;
+        Matrix<T> input;
+        Matrix<T> output;
+
+        // Creates layer.
+        Layer(int dims);
+        Layer(LayerType type, int dims);
+        Layer(LayerType type, int dims, std::string string);
+
+        void initWeight(int row_size, int col_size);
+        void initBias(int row_size, int col_size);
+
+        void setInput(Matrix<T> input)   { this->input = input; }
+        void setOutput(Matrix<T> output) { this->output = output; }
+
         Matrix<T> linear_forward();
-        Matrix<T> backward();
 };
 
 template <class T>
-Dense<T>::Dense<T>(int units, std::string activation) {
-    this->weights = new Matrix<T>(units, 1);
-    this->bias = new Matrix<T>(units, 1);
-    this->activation = activation;
+Layer<T>::Layer(int dims) {
+    this->dims = dims;
 }
 
 template <class T>
-Dense<T>::Dense<T>(int units, std::string activation, bool use_bias) {
-    this->activation = this->activation;
-    if (use_bias) this(units, activation);
-    else {
-        this->use_bias = false;
-        this->weights = new Matrix<T>(units, 1);
-    }
+Layer<T>::Layer(LayerType type, int dims) {
+    this->dims = dims;
 }
 
 template <class T>
-Matrix<T> Dense<T>::linear_forward() {
+void Layer<T>::initWeight(int row_size, int col_size) {
+    Matrix<T> mat(row_size, col_size);
+    this->weights = mat;
+    this->weights = this->weights.to_ramdom();
+}
+
+template <class T>
+void Layer<T>::initBias(int row_size, int col_size) {
+    Matrix<T> mat(row_size, col_size);
+    this->bias = mat;
+    this->bias = this->bias.to_ramdom();
+}
+
+template <class T>
+Matrix<T> Layer<T>::linear_forward() {
     Matrix<T> Z;
-    Matrix<T> A;
-    if (this->use_bias)
-        Z = this->weights.dot(this->inputs) + this->bias;
-    else
-        Z = this->weights.dot(this->inputs);
 
-    switch (this->activation)
+    switch (this->type)
     {
-        case "sigmoid":
-            A = Activation::sigmoid(Z);
+        case LayerType::Dense:
+            Z = this->weights.dot(this->input) + this->bias;
+            break;
+        
+        default:
             break;
     }
-
-    return A;
-}
-
-template <class T>
-Matrix<T> Dense<T>::backward() {
-    
+    return Z;
 }
 
 #endif /* _lAYER_H_ */
