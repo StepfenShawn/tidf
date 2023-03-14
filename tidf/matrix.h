@@ -30,6 +30,16 @@
 #define TRANSPOSE(m) \
         ( m.transpose() )
 
+#define TRY_BRANDCAST(m1, m2) \
+    m1 = ((m2.col_size + m2.row_size) > (m.col_size + m.row_size)) ? m1.brandcast(m2) : m1;\
+    m2 = ((m2.col_size + m2.row_size) < (m.col_size + m.row_size)) ? m2.brandcast(m1) : m2\
+
+# define BRANDCAST_ERROR (std::string)"operands could not be broadcast together with shapes "
+# define RAISE_BRANDCAST_ERROR \
+    throw std::invalid_argument(BRANDCAST_ERROR + "("  + std::to_string(this->row_size) +\
+        ", " + std::to_string(this->col_size) + ") (" + std::to_string(m.row_size) + ", " +\
+        std::to_string(m.col_size) + "). ")
+
 template <class T>
 class Matrix {
     private:
@@ -54,8 +64,8 @@ class Matrix {
         Matrix<T> col(size_t i) const;
         Matrix<T> row(size_t i) const;
 
-        Matrix<T> addCol(Matrix<T>& newCol);
-        Matrix<T> addRow(Matrix<T>& newRow);
+        Matrix<T> addCol(Matrix<T> const& newCol);
+        Matrix<T> addRow(Matrix<T> const& newRow);
 
         // Apply function to each element in Matrix
         Matrix<T> apply(T (*function)(T)) const;
@@ -92,6 +102,8 @@ template <class T> Matrix<T> operator + (const Matrix<T>& a, const Matrix<T>& b)
 template <class T> Matrix<T> operator - (const Matrix<T>& a, const Matrix<T>& b);
 template <class T> Matrix<T> operator * (T a, const Matrix<T>& m);
 template <class T> Matrix<T> operator * (const Matrix<T>& m, T a);
+template <class T> Matrix<T> operator * (const Matrix<T>& a, const Matrix<T>& b);
+template <class T> Matrix<T> operator / (const Matrix<T>& m, T a);
 
 template <class T> Matrix<T> operator + (T a, Matrix<T>& m);
 template <class T> Matrix<T> operator + (Matrix<T>& m, T a);
@@ -253,22 +265,16 @@ bool Matrix<T>::sameShape(const Matrix<T>& m) const {
 
 template <class T>
 Matrix<T> Matrix<T>::add(const Matrix<T>& m) const {
-    if (!this->sameShape(m)){
-        if (this->col_size == m.col_size || this->row_size == m.row_size) {
-            // if (this->col_size )
-        } else {
-            throw std::invalid_argument(" ValueError: frames are not aligned! ");
-        }
+    Matrix<T> m1 = m;
+    Matrix<T> m2 = *this;
+    if (!this->sameShape(m)) {
+        TRY_BRANDCAST(m1, m2);
     }
-    Matrix<T> m1 = m.brandcast(*this);
-    
-    if (!this->sameShape(m1))
-        throw std::invalid_argument(" Error: catched in brandcasting! ");
 
-    Matrix<T> result(this->row_size, this->col_size);
-    for (int i = 0; i < this->row_size; i++) {
-        for (int j = 0; j < this->col_size; j++) {
-            result.mat_arr[i][j] = this->mat_arr[i][j] + m1.mat_arr[i][j];
+    Matrix<T> result(m1.row_size, m1.col_size);
+    for (int i = 0; i < m1.row_size; i++) {
+        for (int j = 0; j < m2.col_size; j++) {
+            result.mat_arr[i][j] = m1.mat_arr[i][j] + m2.mat_arr[i][j];
         }
     }
     return result;
@@ -276,12 +282,16 @@ Matrix<T> Matrix<T>::add(const Matrix<T>& m) const {
 
 template <class T>
 Matrix<T> Matrix<T>::sub(const Matrix<T>& m) const {
-    if (!this->sameShape(m))
-        throw std::invalid_argument(" Matrix dimension must be the same!  ");
-    Matrix<T> result(this->row_size, this->col_size);
-    for (int i = 0; i < this->row_size; i++) {
-        for (int j = 0; j < this->col_size; j++) {
-            result.mat_arr[i][j] = this->mat_arr[i][j] - m->mat_arr[i][j];
+    Matrix<T> m1 = m;
+    Matrix<T> m2 = *this;
+    if (!this->sameShape(m)) {
+        TRY_BRANDCAST(m1, m2);
+    }
+
+    Matrix<T> result(m1.row_size, m1.col_size);
+    for (int i = 0; i < m1.row_size; i++) {
+        for (int j = 0; j < m2.col_size; j++) {
+            result.mat_arr[i][j] = m1.mat_arr[i][j] - m2.mat_arr[i][j];
         }
     }
     return result;
@@ -291,6 +301,24 @@ template <class T>
 Matrix<T> Matrix<T>::mul(const T& value) const {
     std::function<T(T)> f = [value](T x) -> T { return x * value; };
     return this->apply(f);
+}
+
+// Element-wise operator.
+template <class T>
+Matrix<T> Matrix<T>::mul(const Matrix<T>& m) const {
+    Matrix<T> m1 = m;
+    Matrix<T> m2 = *this;
+    if (!this->sameShape(m)) {
+        TRY_BRANDCAST(m1, m2);
+    }
+
+    Matrix<T> result(m1.row_size, m1.col_size);
+    for (int i = 0; i < m1.row_size; i++) {
+        for (int j = 0; j < m2.col_size; j++) {
+            result.mat_arr[i][j] = m1.mat_arr[i][j] * m2.mat_arr[i][j];
+        }
+    }
+    return result;
 }
 
 template <class T>
@@ -333,30 +361,38 @@ Matrix<T> Matrix<T>::join(const Matrix<T>& m) const {
 }
 
 template <class T>
-Matrix<T> Matrix<T>::addRow(Matrix<T>& newRow) {
+Matrix<T> Matrix<T>::addRow(Matrix<T> const& newRow) {
     return this->join(newRow);
 }
 
 template <class T>
-Matrix<T> Matrix<T>::addCol(Matrix<T>& newCol) {
+Matrix<T> Matrix<T>::addCol(Matrix<T> const& newCol) {
     return this->transpose().join(newCol).transpose();
 }
 
 template <class T>
 Matrix<T> Matrix<T>::brandcast(Matrix<T> const& m) const {
     Matrix<T> result = *this;
-    if (this->col_size == m.col_size) {
-        Matrix<T> lastRow = this->row(this->row_size - 1);
-        for (int ii = 0; ii < m.row_size - this->row_size; ii++) {
-            result.join(lastRow);
+    // TODO: Support trailing dimension when there is 2 different dims Matrixs.
+    if (this->row_size == m.row_size) {
+        if (this->col_size == 1) {
+            for (int ii = 0; ii < m.col_size - this->col_size; ii++)
+                result = result.addCol(this->transpose());
+            return result;
+        } 
+        else { RAISE_BRANDCAST_ERROR; }
+    } else if (this->col_size == m.col_size) {
+        if (this->row_size == 1) {
+            for (int ii = 0; ii < m.row_size - this->row_size; ii++)
+                result = result.addRow(*this);
+            return result;
         }
-    } else if (this->row_size == m.row_size) {
-        Matrix<T> lastCol = this->col(this->col_size - 1);
-        for (int ii = 0; ii < m.col_size - this->col_size; ii++) {
-            result = result.transpose().join(lastCol).transpose();
-        }
+        else { RAISE_BRANDCAST_ERROR; }
+    } else {
+        RAISE_BRANDCAST_ERROR;
+        return Matrix<T>();
     }
-    return result;
+    
 }
 
 template <class T>
@@ -396,13 +432,19 @@ Matrix<T> operator - (const Matrix<T>& a, const Matrix<T>& b) {
 }
 
 template <class T>
-Matrix<T> operator * (const Matrix<T>& m, T a) {
-    return m.mul(a);
+Matrix<T> operator * (const Matrix<T>& m, T a) { return m.mul(a); }
+
+template <class T>
+Matrix<T> operator * (T a, const Matrix<T>& m) { return m.mul(a); }
+
+template <class T>
+Matrix<T> operator * (const Matrix<T>& a, const Matrix<T>& b) {
+    return a.mul(b);
 }
 
 template <class T>
-Matrix<T> operator * (T a, const Matrix<T>& m) {
-    return m.mul(a);
+Matrix<T> operator / (const Matrix<T>& m, T a) {
+    return m.mul(T(1) / a);
 }
 
 template <class T>

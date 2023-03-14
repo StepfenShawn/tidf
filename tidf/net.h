@@ -2,13 +2,18 @@
 #define _NET_H_
 
 #include "layer.h"
+#include "optimizer.h"
 
 template <class T>
 class Net {
     private:
-        std::vector<Layer<T>> Layers;
+        std::vector<Layer<T> > Layers;
         Matrix<T> inputs;
         Matrix<T> outputs;
+
+        std::string loss;
+        std::string optimizer;
+
     public:
         // Constructs
         Net();
@@ -17,6 +22,10 @@ class Net {
         void initParams();
         void addLayer(LayerType type, int dim, std::string activation);
         void train(Matrix<T> inputs, Matrix<T> outputs, int iters);
+        Matrix<T> predict(Matrix<T> inputs);
+
+        void compile(std::string loss, std::string optimizer);
+
         Layer<T> getLayer(int index);
 
         std::string get_config() const;
@@ -41,20 +50,41 @@ void Net<T>::initParams() {
 
 template <class T>
 void Net<T>::addLayer(LayerType type, int dim, std::string activation) {
-    this->Layers.push_back(Layer<T>(type, dim));
+    this->Layers.push_back(Layer<T>(type, dim, activation));
 }
 
 template <class T>
 void Net<T>::train(Matrix<T> inputs, Matrix<T> outputs, int iters) {
-    for (int L = 1; L < this->Layers.size(); L++) {
+    int num_layers = this->Layers.size();
+    // linear forward
+    for (int L = 1; L < num_layers; L++) {
         this->Layers[L].setInput(this->Layers[L - 1].output);
         this->Layers[L].output = this->Layers[L].linear_forward();
+    }
+    Matrix<T> predict = this->Layers[num_layers - 1].output;
+    Matrix<T> cast = Loss::L1Loss(predict, this->outputs);
+    // calcalaute loss
+    // this->Layers[num_layers - 1] = Loss::L1Loss();
+    // backward pagation        
+    for (int L = this->Layers.size() - 1; L > 0; L--) {
+
     }
 }
 
 template <class T>
 Layer<T> Net<T>::getLayer(int index) {
     return this->Layers[index];
+}
+
+template <class T>
+void Net<T>::compile(std::string loss, std::string optimizer) {
+    this->loss = loss;
+    this->optimizer = optimizer;
+}
+
+template <class T>
+Matrix<T> Net<T>::predict(Matrix<T> inputs) {
+    return Matrix<T>();
 }
 
 #endif /* _NET_H_ */

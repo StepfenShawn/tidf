@@ -3,6 +3,7 @@
 
 #include "matrix.h"
 #include "activation.h"
+#include "loss.h"
 
 enum class LayerType {
     Dense = 0,
@@ -11,12 +12,18 @@ enum class LayerType {
 
 template <class T>
 class Layer {
+    private:
+        Matrix<T> linear_forward_activation(Matrix<T> Z);
     public:
         int dims;
         LayerType type;
         std::string activation;
         Matrix<T> weights;
         Matrix<T> bias;
+
+        Matrix<T> dw;
+        Matrix<T> db;
+
         Matrix<T> input;
         Matrix<T> output;
 
@@ -42,6 +49,13 @@ Layer<T>::Layer(int dims) {
 template <class T>
 Layer<T>::Layer(LayerType type, int dims) {
     this->dims = dims;
+}
+
+template <class T>
+Layer<T>::Layer(LayerType type, int dims, std::string activation) {
+    this->type = type;
+    this->dims = dims;
+    this->activation = activation;
 }
 
 template <class T>
@@ -71,7 +85,17 @@ Matrix<T> Layer<T>::linear_forward() {
         default:
             break;
     }
-    return Z;
+    return this->linear_forward_activation(Z);
+}
+
+template <class T>
+Matrix<T> Layer<T>::linear_forward_activation(Matrix<T> Z) {
+    if (this->activation == "sigmoid")
+        return Activation::sigmoid(Z);
+    else if (this->activation == "relu)                                                                                                                                                                                                                                                   ")
+        return Activation::relu(Z);
+    else
+        return Z;
 }
 
 #endif /* _lAYER_H_ */

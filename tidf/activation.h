@@ -26,6 +26,18 @@ namespace Activation {
         std::function<T(T)> f_deriv_sigmoid = [](T x) -> T { return deriv_sigmoid(x); };
         return m.apply(f_deriv_sigmoid);
     }
-}
+
+    template <class T>
+    T relu(T x) {
+        return std::max((T)0, x);
+    }
+
+    template <class T>
+    Matrix<T> relu(const Matrix<T> m) {
+        std::function<T(T)> f_relu = [](T x) -> T { return relu(x); };
+        return m.apply(f_relu);
+    }
+
+};
 
 #endif /* _ACTIVATION_H_  */
