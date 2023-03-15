@@ -18,6 +18,9 @@
 #define NEW_MAT(name, type, value) \
         Matrix<type> name = Matrix<type>(std::vector<std::vector<type > > value )
 
+#define MAT(type, value) \
+        ( Matrix<type>(std::vector<std::vector<type > > value ) )
+
 #define NEW_MAT_SIZE(name, type, shape) \
         Matrix<type> name = Matrix<type> shape
 
@@ -86,13 +89,17 @@ class Matrix {
 
         Matrix<T> dot(const Matrix<T>& m) const;
         Matrix<T> divide(const T& value) const;
+        Matrix<T> divide(const Matrix<T>& m) const;
         // Get the transpose of Matrix
         Matrix<T> transpose() const;
 
         Matrix<T> join(const Matrix<T>& m) const;
 
         bool sameShape(const Matrix<T>& m) const;
+        
         T sum() const;
+        Matrix<T> sum(int axis) const;
+        Matrix<T> sum(int axis, bool keepdims) const;
 
         Matrix<T> to_ramdom();        
         void fill(T value);
@@ -104,6 +111,7 @@ template <class T> Matrix<T> operator * (T a, const Matrix<T>& m);
 template <class T> Matrix<T> operator * (const Matrix<T>& m, T a);
 template <class T> Matrix<T> operator * (const Matrix<T>& a, const Matrix<T>& b);
 template <class T> Matrix<T> operator / (const Matrix<T>& m, T a);
+template <class T> Matrix<T> operator / (const Matrix<T>& a, const Matrix<T>& b);
 
 template <class T> Matrix<T> operator + (T a, Matrix<T>& m);
 template <class T> Matrix<T> operator + (Matrix<T>& m, T a);
@@ -111,7 +119,7 @@ template <class T> Matrix<T> operator + (Matrix<T>& m, T a);
 template <class T> std::ostream& operator << (std::ostream& flux, const Matrix<T>& m);
 template <class T> std::wostream& operator << (std::wostream& flux, const Matrix<T>& m);
 
-// connect 2 Matrixs
+// connect 2 Matrices
 template <class T> Matrix<T> operator >> (const Matrix<T>& a, const Matrix<T>& b);
 
 #endif /* _MATRIX_H_ */
@@ -328,6 +336,23 @@ Matrix<T> Matrix<T>::divide(const T& value) const {
 }
 
 template <class T>
+Matrix<T> Matrix<T>::divide(const Matrix<T>& m) const {
+    Matrix<T> m1 = m;
+    Matrix<T> m2 = *this;
+    if (!this->sameShape(m)) {
+        TRY_BRANDCAST(m1, m2);
+    }
+
+    Matrix<T> result(m1.row_size, m1.col_size);
+    for (int i = 0; i < m1.row_size; i++) {
+        for (int j = 0; j < m2.col_size; j++) {
+            result.mat_arr[i][j] = m2.mat_arr[i][j] / m1.mat_arr[i][j];
+        }
+    }
+    return result;
+}
+
+template <class T>
 Matrix<T> Matrix<T>::dot(const Matrix<T>& m) const {
     if (!(this->col_size == m.row_size))
         throw std::invalid_argument("Dot product not compatible.");
@@ -351,7 +376,7 @@ Matrix<T> Matrix<T>::dot(const Matrix<T>& m) const {
 template <class T>
 Matrix<T> Matrix<T>::join(const Matrix<T>& m) const {
     if (!(this->col_size == m.col_size))
-        throw std::invalid_argument("2 matrixs' col_size are not same. ");
+        throw std::invalid_argument(" Fail to concat 2 matrices: The col_size are not same. ");
     std::vector<std::vector<T> > result_mat_arr{ this->mat_arr };
     for (auto e : m.mat_arr){
         result_mat_arr.push_back(e);
@@ -373,7 +398,7 @@ Matrix<T> Matrix<T>::addCol(Matrix<T> const& newCol) {
 template <class T>
 Matrix<T> Matrix<T>::brandcast(Matrix<T> const& m) const {
     Matrix<T> result = *this;
-    // TODO: Support trailing dimension when there is 2 different dims Matrixs.
+    // TODO: Support trailing dimension when there is 2 different dims Matrices.
     if (this->row_size == m.row_size) {
         if (this->col_size == 1) {
             for (int ii = 0; ii < m.col_size - this->col_size; ii++)
@@ -405,6 +430,27 @@ T Matrix<T>::sum() const {
     }
     return sum;
 }
+
+template <class T>
+Matrix<T> Matrix<T>::sum(int axis) const {
+    if (axis == 0) {
+        Matrix<T> result(this->row_size, 1);
+        for (int i = 0; i < this->row_size; i++)
+            result = result.addRow(Matrix<T>(std::vector<std::vector<T> >{{this->row(i).sum()}}));
+        return result;
+    } else {
+        Matrix<T> result(1, this->col_size);
+        for (int i = 0; i < this->col_size; i++)
+            result = result.addCol(Matrix<T>(std::vector<std::vector<T> >{{this->col(i).sum()}}));
+        return result;
+    }
+    return Matrix<T>();
+}
+
+// template <class T>
+// Matrix<T> Matrix<T>::sum(int axis, bool keepdims) const {
+
+// }
 
 template <class T>
 Matrix<T> Matrix<T>::to_ramdom() {
@@ -445,6 +491,11 @@ Matrix<T> operator * (const Matrix<T>& a, const Matrix<T>& b) {
 template <class T>
 Matrix<T> operator / (const Matrix<T>& m, T a) {
     return m.mul(T(1) / a);
+}
+
+template <class T>
+Matrix<T> operator / (const Matrix<T>& a, const Matrix<T>& b) {
+    return a.divide(b);
 }
 
 template <class T>

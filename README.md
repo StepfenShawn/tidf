@@ -1,5 +1,5 @@
 # Tidf
-[Wip] A tiny but fast deep-learning framework in c++.  
+A tiny but fast deep-learning framework in c++.  
 
 # Why Tidf?
 * Powerful: provides a Keras-like api.
@@ -8,7 +8,40 @@
 
 # Examples
 
+### Train a 3-Layers neural network
+```cpp
+#include "tidf/net.h"
+
+int main() {
+    _TIDF_INIT_;
+    NEW_MAT(train_inputs, double, 
+      ({{0.0, 0.0, 1.0},
+        {1.0, 1.0, 1.0},
+        {1.0, 0.0, 1.0},
+        {0.0, 1.0, 1.0}}));
+
+    NEW_MAT(train_outputs, double,
+      ({{0.0, 1.0, 1.0, 0.0}}));
+    
+    Net<double>* net = new Net<double>(train_inputs.transpose(), train_outputs);
+    net->addLayer(LayerType::Dense, 4, "sigmoid");
+    net->addLayer(LayerType::Dense, 4, "sigmoid");
+    net->addLayer(LayerType::Dense, 1, "sigmoid");
+    net->compile("CrossEntropyLoss", "SGD");
+    net->fit(train_inputs, train_outputs, 50000);
+    std::cout << net->predict(
+      MAT( double, ({{1.0}, {1.0}, {1.0}})) ) << std::endl;
+    return 0;
+}
+```
+Result:  
+```
+Matrix(1 x 1):
+0.996808
+```
+
 ### Matrix
+`tidf` supports `brandcast` and provides a simple but powerful `API` to make it easier to work with matrices:  
 ```cpp
 #include "tidf/matrix.h"
 

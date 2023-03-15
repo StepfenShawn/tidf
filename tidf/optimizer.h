@@ -6,8 +6,8 @@ namespace Optimizer {
     
     // Stochastic gradient descent.
     template <class T>
-    Matrix<T> SGD(Matrix<T>& weights, Matrix<T>& dweights, double learning_rate) {
-        weights = weights - dweights * (T)learning_rate;
+    Matrix<T> SGD(Matrix<T>& weights, Matrix<T>& dw, double learning_rate) {
+        weights = weights - dw * learning_rate;
         return weights;
     }
 };

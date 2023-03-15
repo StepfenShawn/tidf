@@ -38,6 +38,17 @@ namespace Activation {
         return m.apply(f_relu);
     }
 
+    template <class T>
+    T deriv_relu(T x) {
+        return x > 0 ? 1 : 0;
+    }
+
+    template <class T>
+    Matrix<T> deriv_relu(const Matrix<T> m) {
+        std::function<T(T)> f_deriv_relu = [](T x) -> T { return deriv_relu(x); };
+        return m.apply(f_deriv_relu);
+    }
+
 };
 
 #endif /* _ACTIVATION_H_  */

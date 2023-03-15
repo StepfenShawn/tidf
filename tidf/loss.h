@@ -7,7 +7,7 @@ namespace Loss {
     template <class T>
     Matrix<T> L1Loss(Matrix<T> x, Matrix<T> y) {
         // assert(x.sameShape(y));
-        T N = x.col_size;
+        T N = y.col_size;
         Matrix<T> sum(x.row_size, 1);
         sum.fill((T)0);
         for (int i = 0; i < N; i++) {
@@ -23,7 +23,11 @@ namespace Loss {
 
     template <class T>
     Matrix<T> CrossEntropyLoss(Matrix<T> x, Matrix<T> y) {
-        return Matrix<T>();
+        T N = y.col_size;
+        std::function<T(T)> f_log = [](T x) -> T { return log(x); };
+        std::function<T(T)> f1 = [](T x) -> T { return (T)1 - x; };
+        Matrix<T> cast = y * x.apply(f_log) + (y.apply(f1) * x.apply(f1).apply(f_log));
+        return cast * (-1 / N);
     }
 };
 
