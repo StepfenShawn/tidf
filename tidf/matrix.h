@@ -103,10 +103,13 @@ class Matrix {
 
         Matrix<T> to_ramdom();        
         void fill(T value);
+
+        std::string shape() const;
 };
 
 template <class T> Matrix<T> operator + (const Matrix<T>& a, const Matrix<T>& b);
 template <class T> Matrix<T> operator - (const Matrix<T>& a, const Matrix<T>& b);
+template <class T> Matrix<T> operator - (const Matrix<T>& m);
 template <class T> Matrix<T> operator * (T a, const Matrix<T>& m);
 template <class T> Matrix<T> operator * (const Matrix<T>& m, T a);
 template <class T> Matrix<T> operator * (const Matrix<T>& a, const Matrix<T>& b);
@@ -187,13 +190,20 @@ std::wostream& operator << (std::wostream& flux, const Matrix<T>& m) {
 template <class T>
 Matrix<T> Matrix<T>::col(size_t i) const {
     NEW_MAT(result, T, { this->transpose().mat_arr[i] });
-    return result;
+    return result.transpose();
 }
 
 template <class T>
 Matrix<T> Matrix<T>::row(size_t i) const {
     NEW_MAT(result, T, { this->mat_arr[i] });
     return result;
+}
+
+template <class T>
+std::string Matrix<T>::shape() const {
+    return (std::string)" (" + 
+        std::to_string(this->row_size)  + ", " +
+        std::to_string(this->col_size) + ") ";
 }
 
 template <class T>
@@ -355,7 +365,7 @@ Matrix<T> Matrix<T>::divide(const Matrix<T>& m) const {
 template <class T>
 Matrix<T> Matrix<T>::dot(const Matrix<T>& m) const {
     if (!(this->col_size == m.row_size))
-        throw std::invalid_argument("Dot product not compatible.");
+        throw std::invalid_argument("Dot product not compatible. " + this->shape() + " " + m.shape());
 
     Matrix<T> result(this->row_size, m.col_size);
 
@@ -434,23 +444,34 @@ T Matrix<T>::sum() const {
 template <class T>
 Matrix<T> Matrix<T>::sum(int axis) const {
     if (axis == 0) {
-        Matrix<T> result(this->row_size, 1);
+        std::vector<std::vector<T > > res_mat_arr; 
         for (int i = 0; i < this->row_size; i++)
-            result = result.addRow(Matrix<T>(std::vector<std::vector<T> >{{this->row(i).sum()}}));
-        return result;
+            res_mat_arr.push_back(std::vector<T>{this->row(i).sum()});
+        return Matrix<T>(res_mat_arr);
     } else {
-        Matrix<T> result(1, this->col_size);
+        std::vector<std::vector<T > > res_mat_arr{std::vector<T>(0)};
         for (int i = 0; i < this->col_size; i++)
-            result = result.addCol(Matrix<T>(std::vector<std::vector<T> >{{this->col(i).sum()}}));
-        return result;
+            res_mat_arr[0].push_back(this->col(i).sum());
+        return Matrix<T>(res_mat_arr);
     }
     return Matrix<T>();
 }
 
-// template <class T>
-// Matrix<T> Matrix<T>::sum(int axis, bool keepdims) const {
-
-// }
+template <class T>
+Matrix<T> Matrix<T>::sum(int axis, bool keepdims) const {
+    Matrix<T> result = this->sum(axis);
+    if (keepdims) {
+        Matrix<T> temp = result;
+        if (result.row_size == 1) {
+            for (int ii = 1; ii <= this->row_size; ii++)
+                result = result.addRow(temp);
+        } else if (result.col_size == 1) {
+            for (int ii = 1; ii <= this->col_size; ii++)
+                result = result.addCol(temp);
+        }
+    }
+    return result;
+}
 
 template <class T>
 Matrix<T> Matrix<T>::to_ramdom() {
@@ -464,7 +485,7 @@ Matrix<T> operator + (const Matrix<T>& a, const Matrix<T>& b) {
 
 template <class T>
 Matrix<T> operator + (const Matrix<T>& m, T a) {
-    return m.apply([a](T x) -> T {return x + a;});
+    return m.apply([a](T x) -> T { return x + a; });
 }
 
 template <class T>
@@ -475,6 +496,11 @@ Matrix<T> operator + (T a, const Matrix<T>& m) {
 template <class T>
 Matrix<T> operator - (const Matrix<T>& a, const Matrix<T>& b) {
     return a.sub(b);
+}
+
+template <class T>
+Matrix<T> operator - (const Matrix<T>& m) {
+    return m.apply([](T x) -> T { return -x; });
 }
 
 template <class T>

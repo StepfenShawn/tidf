@@ -29,6 +29,13 @@ namespace Loss {
         Matrix<T> cast = y * x.apply(f_log) + (y.apply(f1) * x.apply(f1).apply(f_log));
         return cast * (-1 / N);
     }
+
+    template <class T>
+    Matrix<T> CrossEntropyLossBackward(Matrix<T> predict, Matrix<T> outputs) {
+        return ( -outputs ) / predict
+             + outputs.apply([](T x) -> T { return (T)1 - x; }) /
+               predict.apply([](T x) -> T { return (T)1 - x; });
+    }
 };
 
 #endif /* _LOSS_H_ */

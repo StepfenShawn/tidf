@@ -82,8 +82,6 @@ void Layer<T>::initBias(int row_size, int col_size) {
 
 template <class T>
 Matrix<T> Layer<T>::linear_forward() {
-    Matrix<T> Z;
-
     switch (this->type)
     {
         case LayerType::Dense:
@@ -110,7 +108,11 @@ template <class T>
 void Layer<T>::linear_backward(Matrix<T> dZ, Matrix<T> A_prev) {
     T m = this->output.col_size;
     this->dw = this->dZ.dot(A_prev.transpose()) * (1 / m);
-    this->db = this->dZ.sum(1) * (1 / m);
+    this->db = Matrix<T>(dZ.row_size, 1);
+    this->db.fill((T)0);
+    for (int i = 0; i < this->dZ.col_size; i++)
+        this->db = this->db + dZ.col(i);
+    this->db = this->db * (1 / m);
 }
 
 // notice: the parameter dA come from last layer

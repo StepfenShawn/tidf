@@ -70,22 +70,20 @@ void Net<T>::thinking(Matrix<T> inputs, Matrix<T> outputs) {
     Matrix<T> AL;
     
     if (this->loss == "CrossEntropyLoss") {
-        AL = this->outputs.apply([](T x) -> T { return -x; }) / predict
-             + this->outputs.apply([](T x) -> T { return (T)1 - x; }) /
-            predict.apply([](T x) -> T { return (T)1 - x; });
+        AL = Loss::CrossEntropyLossBackward(predict, this->outputs);
+        Matrix<T> cast = Loss::CrossEntropyLoss(predict, this->outputs);
+        // std::cout << cast.sum() << std::endl;
     }
-    Matrix<T> cast = Loss::CrossEntropyLoss(predict, this->outputs);   
+
     for (int L = this->Layers.size() - 1; L >= 1; L--) {
-        if (L == this->Layers.size() - 1) {
+        if (L == this->Layers.size() - 1)
             this->Layers[L].linear_backward_activation(AL, this->Layers[L].Z);
-            this->Layers[L - 1].da = this->Layers[L].weights.transpose().dot(this->Layers[L].dZ);
-        }
-        else {
-            this->Layers[L].linear_backward_activation(this->Layers[L].da, 
-                            this->Layers[L].Z);
-            this->Layers[L - 1].da = this->Layers[L].weights.transpose().dot(this->Layers[L].dZ);
-        }
+        else
+            this->Layers[L].linear_backward_activation(this->Layers[L].da, this->Layers[L].Z);
+        this->Layers[L - 1].da = this->Layers[L].weights.transpose().dot(this->Layers[L].dZ);
+    
         this->Layers[L].weights = this->Layers[L].weights - 0.05 * this->Layers[L].dw;
+        this->Layers[L].bias = this->Layers[L].bias - 0.05 * this->Layers[L].db;
     }
 }
 
@@ -109,7 +107,6 @@ void Net<T>::compile(std::string loss, std::string optimizer) {
 
 template <class T>
 Matrix<T> Net<T>::predict(Matrix<T> inputs) {
-    // this->inputs = inputs;
     int num_layers = this->Layers.size();
     this->Layers[0].setOutput(inputs);
     // linear forward
