@@ -100,6 +100,8 @@ Matrix<T> Layer<T>::linear_forward_activation(Matrix<T> Z) {
         return Activation::sigmoid(Z);
     else if (this->activation == "relu)                                                                                                                                                                                                                                                   ")
         return Activation::relu(Z);
+    else if (this->activation == "tanh")
+        return Activation::_tanh(Z);
     else
         return Z;
 }
@@ -120,11 +122,13 @@ template <class T>
 void Layer<T>::linear_backward_activation(Matrix<T> dA, Matrix<T> Activation_cache) {
     if (this->activation == "sigmoid") {
         this->dZ = dA * Activation::deriv_sigmoid(Activation_cache);
-        this->linear_backward(this->dZ, this->input);
     } else if (this->activation == "relu") {
         this->dZ = dA * Activation::deriv_relu(Activation_cache);
-        this->linear_backward(this->dZ, this->input);
+    } else if (this->activation == "tanh") {
+        this->dZ = dA * Activation::deriv_tanh(Activation_cache);
     }
+
+    this->linear_backward(this->dZ, this->input);
 }
 
 #endif /* _lAYER_H_ */

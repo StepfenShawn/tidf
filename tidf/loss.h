@@ -17,9 +17,13 @@ namespace Loss {
     }
 
     template <class T>
-    Matrix<T> MSELoss(Matrix<T> x, Matrix<T> y) {
-        return Matrix<T>();
-    }
+    Matrix<T> L1LossBackward(Matrix<T> x, Matrix<T> y) { return Matrix<T>(); }
+
+    template <class T>
+    Matrix<T> MSELoss(Matrix<T> x, Matrix<T> y) { return Matrix<T>(); }
+
+    template <class T>
+    Matrix<T> MSELossBackward(Matrix<T> x, Matrix<T> y) { return Matrix<T>(); }
 
     template <class T>
     Matrix<T> CrossEntropyLoss(Matrix<T> x, Matrix<T> y) {

@@ -2,9 +2,28 @@
 A tiny but fast deep-learning framework in c++.  
 
 # Why Tidf?
-* Powerful: provides a Keras-like api.
+* Powerful: `Tidf` provides a Keras-like api.
 * Simple and stupid: Support brandcast and made in pure c++11.
 * Tiny but fast: The implementation is under 1,000 semicolons.
+
+# Components
+#### Layers
+* Dense Layer (Linear Layer)
+
+#### Activations
+* sigmoid
+* relu
+* tanh
+
+#### Optimizers
+* SGD (Stochastic gradient descent)
+
+### Cast Functions
+* CrossEntropy
+* MSE (L2Loss)
+* L1Loss
+
+more to come! :)
 
 # Examples
 
@@ -25,7 +44,7 @@ int main() {
     
     Net<double>* net = new Net<double>(train_inputs.transpose(), train_outputs);
     net->addLayer(LayerType::Dense, 4, "sigmoid");
-    net->addLayer(LayerType::Dense, 4, "sigmoid");
+    net->addLayer(LayerType::Dense, 4, "tanh");
     net->addLayer(LayerType::Dense, 1, "sigmoid");
     net->compile("CrossEntropyLoss", "SGD");
     net->fit(train_inputs, train_outputs, 50000);
@@ -37,7 +56,7 @@ int main() {
 Result:  
 ```
 Matrix(1 x 1):
-0.996808
+0.998889
 ```
 
 ### Matrix
@@ -57,15 +76,6 @@ int main() {
     return 0;
 }
 ```
-
-### Activation function
-```cpp
-#include "tidf/activation.h"
-
-int main() {
-    NEW_MAT(m1, double, ({{10.1, 10.1, 10.1}}));
-    std::cout << Activation::sigmoid(m1.transpose()) << std::endl;
-    std::cout << Activation::deriv_sigmoid(m1.transpose()) << std::endl;
-    return 0;
-}
-```
+# License
+MIT License  
+Copyright (c) 2023 Stepfen Shawn

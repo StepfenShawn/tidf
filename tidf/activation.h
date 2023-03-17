@@ -49,6 +49,17 @@ namespace Activation {
         return m.apply(f_deriv_relu);
     }
 
+    template <class T>
+    Matrix<T> _tanh(const Matrix<T> m) {
+        return m.apply(tanh);
+    }
+
+    template <class T>
+    Matrix<T> deriv_tanh(const Matrix<T> m) {
+        std::function<T(T)> f_deriv_tanh = [](T x) -> T { return 1 - tanh(x) * tanh(x); };
+        return m.apply(f_deriv_tanh);
+    }
+
 };
 
 #endif /* _ACTIVATION_H_  */
