@@ -12,8 +12,8 @@ int main() {
       ({{0.0, 1.0, 1.0, 0.0}}));
     
     Net<double>* net = new Net<double>(train_inputs.transpose(), train_outputs);
-    net->addLayer(LayerType::Dense, 4, "sigmoid");
-    net->addLayer(LayerType::Dense, 4, "tanh");
+    net->addLayer(LayerType::Dense, 4, "sigmoid"); 
+    net->addLayer(LayerType::Dense, 4, "tanh"); 
     net->addLayer(LayerType::Dense, 1, "sigmoid");
     net->compile("CrossEntropyLoss", "SGD");
     net->fit(train_inputs, train_outputs, 50000);

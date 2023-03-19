@@ -45,8 +45,8 @@ class Layer {
         Matrix<T> linear_forward();
 
         // backward: dLoss->dA->dZ->dw, db
-        void linear_backward(Matrix<T> dZ, Matrix<T> A_prev);
-        void linear_backward_activation(Matrix<T> dA, Matrix<T> A_prev);
+        void linear_backward(Matrix<T> dZ, Matrix<T> A_prev, T m);
+        void linear_backward_activation(Matrix<T> dA, Matrix<T> A_prev, T m);
 };
 
 template <class T>
@@ -107,8 +107,7 @@ Matrix<T> Layer<T>::linear_forward_activation(Matrix<T> Z) {
 }
 
 template <class T>
-void Layer<T>::linear_backward(Matrix<T> dZ, Matrix<T> A_prev) {
-    T m = this->output.col_size;
+void Layer<T>::linear_backward(Matrix<T> dZ, Matrix<T> A_prev, T m) {
     this->dw = this->dZ.dot(A_prev.transpose()) * (1 / m);
     this->db = Matrix<T>(dZ.row_size, 1);
     this->db.fill((T)0);
@@ -119,7 +118,7 @@ void Layer<T>::linear_backward(Matrix<T> dZ, Matrix<T> A_prev) {
 
 // notice: the parameter dA come from last layer
 template <class T>
-void Layer<T>::linear_backward_activation(Matrix<T> dA, Matrix<T> Activation_cache) {
+void Layer<T>::linear_backward_activation(Matrix<T> dA, Matrix<T> Activation_cache, T m) {
     if (this->activation == "sigmoid") {
         this->dZ = dA * Activation::deriv_sigmoid(Activation_cache);
     } else if (this->activation == "relu") {
@@ -128,7 +127,7 @@ void Layer<T>::linear_backward_activation(Matrix<T> dA, Matrix<T> Activation_cac
         this->dZ = dA * Activation::deriv_tanh(Activation_cache);
     }
 
-    this->linear_backward(this->dZ, this->input);
+    this->linear_backward(this->dZ, this->input, m);
 }
 
 #endif /* _lAYER_H_ */

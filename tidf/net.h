@@ -16,6 +16,16 @@ class Net {
 
         std::string loss;
         std::string optimizer;
+        // -------------- Regularization ----------------
+        std::string regularization = "";
+        double lambda;
+        double keep_prob;
+
+        Matrix<T> L2Regularization(T m, double lambda, Matrix<T> weights);
+
+        // ----------------------------------------------
+        
+        double learning_rate = 0.05;
 
         // Type: Matrix<T> (predict), Matrix<T> (output) -> Matrix<T>
         std::function<Matrix<T>(Matrix<T>, Matrix<T>)> f_loss;
@@ -30,10 +40,20 @@ class Net {
 
         void initParams();
         void addLayer(LayerType type, int dim, std::string activation);
-        void fit(Matrix<T> inputs, Matrix<T> outputs, int iters);
+        
+        // ---------- Regularization ---------------
+        void Dropout(double keep_prob);
+        void SetL2Regularization(double lambda);
+        void SetL1Regularization(double lambda);
+        // -----------------------------------------
+
+        void fit(Matrix<T> inputs, Matrix<T> outputs, long long iters);
         Matrix<T> predict(Matrix<T> inputs);
 
         void compile(std::string loss, std::string optimizer);
+        void compile(std::function<Matrix<T>(Matrix<T>, Matrix<T>)> f_loss, 
+                    std::function<Matrix<T>(Matrix<T>, Matrix<T>)> f_loss_back,
+                    std::string optimizer);
 
         Layer<T> getLayer(int index);
 
@@ -63,8 +83,25 @@ void Net<T>::addLayer(LayerType type, int dim, std::string activation) {
 }
 
 template <class T>
+void Net<T>::Dropout(double keep_prob) {
+
+}
+
+template <class T>
+void Net<T>::SetL2Regularization(double lambda) {
+    this->regularization = "L2";
+    this->lambda = lambda;
+}
+
+template <class T>
+Matrix<T> Net<T>::L2Regularization(T m, double lambda, Matrix<T> weights) {
+    return weights * (lambda / m);
+}
+
+template <class T>
 void Net<T>::thinking(Matrix<T> inputs, Matrix<T> outputs) {
     int num_layers = this->Layers.size();
+    T m = this->inputs.col_size;
     // linear forward
     for (int L = 1; L < num_layers; L++) {
         this->Layers[L].setInput(this->Layers[L - 1].output);
@@ -72,25 +109,33 @@ void Net<T>::thinking(Matrix<T> inputs, Matrix<T> outputs) {
     }
     Matrix<T> predict = this->Layers[num_layers - 1].output;
     Matrix<T> AL = this->f_loss_backward(predict, this->outputs);
-    Matrix<T> cast = this->f_loss(predict, this->outputs);
+    T cast = this->f_loss(predict, this->outputs).sum();
+    if (this->regularization == "L2") {
+        for (int L = 1; L < num_layers; L++)
+            cast = cast + (this->Layers[L].weights * this->Layers[L].weights).sum();
+    }
 
-    // std::cout << cast.sum() << std::endl;
+    // std::cout << cast << std::endl;
     // backward propagation
     for (int L = this->Layers.size() - 1; L >= 1; L--) {
         if (L == this->Layers.size() - 1)
-            this->Layers[L].linear_backward_activation(AL, this->Layers[L].Z);
+            this->Layers[L].linear_backward_activation(AL, this->Layers[L].Z, m);
         else
-            this->Layers[L].linear_backward_activation(this->Layers[L].da, this->Layers[L].Z);
+            this->Layers[L].linear_backward_activation(this->Layers[L].da, this->Layers[L].Z, m);
         this->Layers[L - 1].da = this->Layers[L].weights.transpose().dot(this->Layers[L].dZ);
-    
-        this->Layers[L].weights = this->Layers[L].weights - 0.05 * this->Layers[L].dw;
-        this->Layers[L].bias = this->Layers[L].bias - 0.05 * this->Layers[L].db;
+
+        if (this->regularization == "L2") {
+            this->Layers[L].dw = this->Layers[L].dw + this->L2Regularization(m, this->lambda, this->Layers[L].weights);
+        }
+        if (this->optimizer == "SGD")
+            Optimizer::SGD(this->Layers[L].weights, this->Layers[L].dw, 
+                        this->Layers[L].bias, this->Layers[L].db, this->learning_rate);
     }
 }
 
 template <class T>
-void Net<T>::fit(Matrix<T> inputs, Matrix<T> outputs, int iters) {
-    for (int iter = 0; iter < iters; iter++)
+void Net<T>::fit(Matrix<T> inputs, Matrix<T> outputs, long long iters) {
+    for (long long iter = 0; iter < iters; iter++)
         this->thinking(inputs, outputs);
 }
 
@@ -121,6 +166,15 @@ void Net<T>::compile(std::string loss, std::string optimizer) {
 }
 
 template <class T>
+void Net<T>::compile(std::function<Matrix<T>(Matrix<T>, Matrix<T>)> f_loss,
+                     std::function<Matrix<T>(Matrix<T>, Matrix<T>)> f_loss_backward,
+                     std::string optimizer) {
+    this->f_loss = f_loss;
+    this->f_loss_backward = f_loss_backward;
+    this->optimizer = optimizer;
+}
+
+template <class T>
 Matrix<T> Net<T>::predict(Matrix<T> inputs) {
     int num_layers = this->Layers.size();
     this->Layers[0].setOutput(inputs);
@@ -131,6 +185,11 @@ Matrix<T> Net<T>::predict(Matrix<T> inputs) {
     }
     Matrix<T> predict = this->Layers[num_layers - 1].output;
     return predict;
+}
+
+template <class T>
+std::string Net<T>::get_config() const {
+    return "";
 }
 
 #endif /* _NET_H_ */

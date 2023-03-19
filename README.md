@@ -7,15 +7,20 @@ A tiny but fast deep-learning framework in c++.
 * Tiny but fast: The implementation is under 1,000 semicolons.
 
 # Components
-#### Layers
+### Layers
 * Dense Layer (Linear Layer)
 
-#### Activations
+### Regularizations
+* L1 regularization
+* L2 regularization
+* Dropout
+
+### Activations
 * sigmoid
 * relu
 * tanh
 
-#### Optimizers
+### Optimizers
 * SGD (Stochastic gradient descent)
 
 ### Cast Functions
