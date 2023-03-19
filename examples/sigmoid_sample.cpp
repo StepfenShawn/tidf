@@ -1,4 +1,4 @@
-#include "tidf/activation.h"
+#include "../tidf/core.h"
 
 int main() {
     std::cout << Activation::sigmoid(10.1) << std::endl;

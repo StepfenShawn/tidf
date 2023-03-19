@@ -1,4 +1,4 @@
-#include "tidf/net.h"
+#include "../tidf/core.h"
 
 int main() {
     _TIDF_INIT_;

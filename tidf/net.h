@@ -1,9 +1,6 @@
 #ifndef _NET_H_
 #define _NET_H_
 
-#include "layer.h"
-#include "optimizer.h"
-
 #define _TIDF_INIT_ \
     _RANDOM_INIT_
 

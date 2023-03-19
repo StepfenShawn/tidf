@@ -9,7 +9,8 @@
 #include <ctime>
 #include <cstdlib>
 
-#define randint(a, b) (rand() % (b - a) + a)
+#define randnum(a, b) (rand() % (b - a) + a)
+#define randint(a, b) (random() % (b - a) + a)
 #define random() (rand() / double(RAND_MAX))
 
 #define _RANDOM_INIT_ \
@@ -78,7 +79,6 @@ class Matrix {
         Matrix<T> Matblock(size_t startH, size_t startW, size_t row_size, size_t col_size) const;
 
         void __str__(std::ostream& flux) const;
-        void __str__(std::wostream& flux) const;
 
         Matrix<T> add(const Matrix<T>& m) const;
         Matrix<T> sub(const Matrix<T>& m) const;
@@ -120,7 +120,6 @@ template <class T> Matrix<T> operator + (T a, Matrix<T>& m);
 template <class T> Matrix<T> operator + (Matrix<T>& m, T a);
 
 template <class T> std::ostream& operator << (std::ostream& flux, const Matrix<T>& m);
-template <class T> std::wostream& operator << (std::wostream& flux, const Matrix<T>& m);
 
 // connect 2 Matrices
 template <class T> Matrix<T> operator >> (const Matrix<T>& a, const Matrix<T>& b);
@@ -156,33 +155,21 @@ Matrix<T>::Matrix() {
 template<class T>
 void Matrix<T>::__str__(std::ostream& flux) const {
     flux << "Matrix(" << this->row_size << " x " << this->col_size  << "):" << std::endl;
-    for (int i = 0; i < this->row_size; i++) {
-        for (int j = 0; j < this->col_size; j++) {
+    int print_rowsize = this->row_size > 30 ? 30 : this->row_size;
+    int print_colsize = this->col_size > 15 ? 15 : this->col_size;
+    for (int i = 0; i < print_rowsize; i++) {
+        for (int j = 0; j < print_colsize; j++) {
             flux << this->mat_arr[i][j] << " ";
         }
+        if (print_colsize != this->col_size) flux << " ... ";
         flux << std::endl;
     }
-}
-
-template<class T>
-void Matrix<T>::__str__(std::wostream& flux) const {
-    flux << L"Matrix(" << this->row_size << " x " << this->col_size  << "):" << std::endl;
-    for (int i = 0; i < this->row_size; i++) {
-        for (int j = 0; j < this->col_size; j++) {
-            flux << this->mat_arr[i][j] << L" ";
-        }
-        flux << std::endl;
-    }
+    if (print_rowsize != this->row_size)
+        flux << "                 .......                 " << std::endl;
 }
 
 template<class T>
 std::ostream& operator << (std::ostream& flux, const Matrix<T>& m) {
-    m.__str__(flux);
-    return flux;
-}
-
-template<class T>
-std::wostream& operator << (std::wostream& flux, const Matrix<T>& m) {
     m.__str__(flux);
     return flux;
 }

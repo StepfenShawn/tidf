@@ -1,4 +1,4 @@
-#include "tidf/matrix.h"
+#include "../tidf/core.h"
 
 int main() {   
     NEW_MAT(m1, double, ({{1, 4, 3}, {1, 2, 3}}));

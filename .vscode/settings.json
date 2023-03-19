@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "limits": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "xstring": "cpp",
+        "regex": "cpp"
     }
 }

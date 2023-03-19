@@ -1,10 +1,6 @@
 #ifndef _LAYER_H_
 #define _LAYER_H_
 
-#include "matrix.h"
-#include "activation.h"
-#include "loss.h"
-
 enum class LayerType {
     Dense = 0,
     Conval   
