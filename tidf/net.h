@@ -11,6 +11,11 @@ class Net {
         Matrix<T> inputs;
         Matrix<T> outputs;
 
+        // -------------- Layers -----------------------
+        int curLayerIndex = -1;
+        Layer<T> getCurLayer();
+        // ---------------------------------------------
+
         std::string loss;
         std::string optimizer;
         // -------------- Regularization ----------------
@@ -32,11 +37,12 @@ class Net {
 
     public:
         // Constructs
-        Net();
+        Net() {};
         Net(Matrix<T> inputs, Matrix<T> outputs);
 
         void initParams();
-        void addLayer(LayerType type, int dim, std::string activation);
+        template <int dim>
+        void addLayer(LayerType type, std::string activation);
         
         // ---------- Regularization ---------------
         void Dropout(double keep_prob);
@@ -44,7 +50,7 @@ class Net {
         void SetL1Regularization(double lambda);
         // -----------------------------------------
 
-        void fit(Matrix<T> inputs, Matrix<T> outputs, long long iters);
+        void fit(long long iters);
         Matrix<T> predict(Matrix<T> inputs);
 
         void compile(std::string loss, std::string optimizer);
@@ -75,13 +81,19 @@ void Net<T>::initParams() {
 }
 
 template <class T>
-void Net<T>::addLayer(LayerType type, int dim, std::string activation) {
+template <int dim>
+void Net<T>::addLayer(LayerType type, std::string activation) {
     this->Layers.push_back(Layer<T>(type, dim, activation));
 }
 
 template <class T>
 void Net<T>::Dropout(double keep_prob) {
-
+    Matrix<T> D1;
+    int col_size = this->getCurLayer().output.col_size;
+    int row_size = this->getCurLayer().output.row_size;
+    Matrix<T> b(row_size, col_size);
+    b.to_ramdom();
+    D1 = b.apply([&](T x) -> T { return x < keep_prob ? 1 : 0; });
 }
 
 template <class T>
@@ -101,6 +113,7 @@ void Net<T>::thinking(Matrix<T> inputs, Matrix<T> outputs) {
     T m = this->inputs.col_size;
     // linear forward
     for (int L = 1; L < num_layers; L++) {
+        this->curLayerIndex = L;
         this->Layers[L].setInput(this->Layers[L - 1].output);
         this->Layers[L].output = this->Layers[L].linear_forward();
     }
@@ -112,9 +125,10 @@ void Net<T>::thinking(Matrix<T> inputs, Matrix<T> outputs) {
             cast = cast + (this->Layers[L].weights * this->Layers[L].weights).sum();
     }
 
-    // std::cout << cast << std::endl;
+    std::cout << cast << std::endl;
     // backward propagation
     for (int L = this->Layers.size() - 1; L >= 1; L--) {
+        this->curLayerIndex = L;
         if (L == this->Layers.size() - 1)
             this->Layers[L].linear_backward_activation(AL, this->Layers[L].Z, m);
         else
@@ -131,14 +145,19 @@ void Net<T>::thinking(Matrix<T> inputs, Matrix<T> outputs) {
 }
 
 template <class T>
-void Net<T>::fit(Matrix<T> inputs, Matrix<T> outputs, long long iters) {
+void Net<T>::fit(long long iters) {
     for (long long iter = 0; iter < iters; iter++)
-        this->thinking(inputs, outputs);
+        this->thinking(this->inputs, this->outputs);
 }
 
 template <class T>
 Layer<T> Net<T>::getLayer(int index) {
     return this->Layers[index];
+}
+
+template <class T>
+Layer<T> Net<T>::getCurLayer() {
+    return this->Layers[this->curLayerIndex];
 }
 
 template <class T>
@@ -186,7 +205,8 @@ Matrix<T> Net<T>::predict(Matrix<T> inputs) {
 
 template <class T>
 std::string Net<T>::get_config() const {
-    return "";
+    return "Loss: " + this->loss + "\n" + 
+            "Optitimizer: " + this->optimizer + "\n";
 }
 
 #endif /* _NET_H_ */

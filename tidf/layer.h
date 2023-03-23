@@ -11,7 +11,9 @@ class Layer {
     private:
         Matrix<T> linear_forward_activation(Matrix<T> Z);
 
+
     public:
+        // numbers of the neurols
         int dims;
         LayerType type;
         std::string activation;
@@ -26,6 +28,8 @@ class Layer {
 
         Matrix<T> input;
         Matrix<T> output;
+
+        bool use_dropout = false;
 
         // Creates layer.
         Layer(int dims);
@@ -43,6 +47,10 @@ class Layer {
         // backward: dLoss->dA->dZ->dw, db
         void linear_backward(Matrix<T> dZ, Matrix<T> A_prev, T m);
         void linear_backward_activation(Matrix<T> dA, Matrix<T> A_prev, T m);
+
+        // regularization: Dropout
+        void dropout(int keep_prob);
+
 };
 
 template <class T>
@@ -124,6 +132,11 @@ void Layer<T>::linear_backward_activation(Matrix<T> dA, Matrix<T> Activation_cac
     }
 
     this->linear_backward(this->dZ, this->input, m);
+}    
+
+template <class T>
+void Layer<T>::dropout(int keep_prob) {
+    return;
 }
 
 #endif /* _lAYER_H_ */
