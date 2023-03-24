@@ -11,7 +11,7 @@ int main() {
     std::cout << m2.join(m3) << std::endl;
     std::cout << m1.row(1).sum() << std::endl;
     _RANDOM_INIT_;
-    std::cout << m1.to_ramdom() << std::endl;
+    std::cout << m1.to_random() << std::endl;
     // brandcast:
     std::cout << m3 + m4 << std::endl;
     return 0;

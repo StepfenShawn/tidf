@@ -12,6 +12,9 @@
 #define randnum(a, b) (rand() % (b - a) + a)
 #define randint(a, b) (random() % (b - a) + a)
 #define random() (rand() / double(RAND_MAX))
+#define randmat(name, type, shape) \
+    Matrix<type> name shape; \
+    name = name.to_random()
 
 #define _RANDOM_INIT_ \
     srand((int)time(NULL))
@@ -101,7 +104,7 @@ class Matrix {
         Matrix<T> sum(int axis) const;
         Matrix<T> sum(int axis, bool keepdims) const;
 
-        Matrix<T> to_ramdom();        
+        Matrix<T> to_random();        
         void fill(T value);
 
         std::string shape() const;
@@ -461,7 +464,7 @@ Matrix<T> Matrix<T>::sum(int axis, bool keepdims) const {
 }
 
 template <class T>
-Matrix<T> Matrix<T>::to_ramdom() {
+Matrix<T> Matrix<T>::to_random() {
     return this->apply([](T x) -> T { return random(); });
 }
 

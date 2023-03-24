@@ -11,9 +11,13 @@ class Layer {
     private:
         Matrix<T> linear_forward_activation(Matrix<T> Z);
 
+        // -------------- Dropout Part ---------------
+        bool use_dropout = false;
+        T keep_prob;
+        // -------------------------------------------
 
     public:
-        // numbers of the neurols
+        // numbers of the neurons
         int dims;
         LayerType type;
         std::string activation;
@@ -29,8 +33,6 @@ class Layer {
         Matrix<T> input;
         Matrix<T> output;
 
-        bool use_dropout = false;
-
         // Creates layer.
         Layer(int dims);
         Layer(LayerType type, int dims);
@@ -41,15 +43,16 @@ class Layer {
 
         void setInput(Matrix<T> input)   { this->input = input; }
         void setOutput(Matrix<T> output) { this->output = output; }
+        void useDropout(T keep_prob) { 
+            this->use_dropout = true;
+            this->keep_prob = keep_prob; 
+        }
 
         Matrix<T> linear_forward();
 
         // backward: dLoss->dA->dZ->dw, db
         void linear_backward(Matrix<T> dZ, Matrix<T> A_prev, T m);
         void linear_backward_activation(Matrix<T> dA, Matrix<T> A_prev, T m);
-
-        // regularization: Dropout
-        void dropout(int keep_prob);
 
 };
 
@@ -74,7 +77,7 @@ template <class T>
 void Layer<T>::initWeight(int row_size, int col_size) {
     Matrix<T> mat(row_size, col_size);
     this->weights = mat;
-    this->weights = this->weights.to_ramdom();
+    this->weights = this->weights.to_random();
 }
 
 template <class T>
@@ -95,7 +98,21 @@ Matrix<T> Layer<T>::linear_forward() {
         default:
             break;
     }
-    return this->linear_forward_activation(this->Z);
+    if (this->use_dropout) {
+        int col_size = this->Z.col_size;
+        int row_size = this->Z.row_size;
+        randmat(b, T, (row_size, col_size));
+        const T k = this->keep_prob;
+        // TODO: fix bug when capturing 'this->keep_prob'
+        Matrix<T> DL = b.apply([](T x) -> T { return x < 0.5 ? 1 : 0; });
+        // Shut down some neurons of A[l]
+        Matrix<T> AL = this->linear_forward_activation(this->Z) * DL;
+        // Scale the value of neurons that haven't been shut down
+        AL = AL / this->keep_prob;
+        return AL;
+    }
+    else
+        return this->linear_forward_activation(this->Z);
 }
 
 template <class T>
@@ -132,11 +149,6 @@ void Layer<T>::linear_backward_activation(Matrix<T> dA, Matrix<T> Activation_cac
     }
 
     this->linear_backward(this->dZ, this->input, m);
-}    
-
-template <class T>
-void Layer<T>::dropout(int keep_prob) {
-    return;
 }
 
 #endif /* _lAYER_H_ */
