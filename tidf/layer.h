@@ -14,6 +14,7 @@ class Layer {
         // -------------- Dropout Part ---------------
         bool use_dropout = false;
         T keep_prob;
+        Matrix<T> DL; // Mask Matrix to shut down the some neurons
         // -------------------------------------------
 
     public:
@@ -43,7 +44,7 @@ class Layer {
 
         void setInput(Matrix<T> input)   { this->input = input; }
         void setOutput(Matrix<T> output) { this->output = output; }
-        void useDropout(T keep_prob) { 
+        void useDropout(const T keep_prob) { 
             this->use_dropout = true;
             this->keep_prob = keep_prob; 
         }
@@ -102,9 +103,7 @@ Matrix<T> Layer<T>::linear_forward() {
         int col_size = this->Z.col_size;
         int row_size = this->Z.row_size;
         randmat(b, T, (row_size, col_size));
-        const T k = this->keep_prob;
-        // TODO: fix bug when capturing 'this->keep_prob'
-        Matrix<T> DL = b.apply([](T x) -> T { return x < 0.5 ? 1 : 0; });
+        this->DL = b < this->keep_prob;
         // Shut down some neurons of A[l]
         Matrix<T> AL = this->linear_forward_activation(this->Z) * DL;
         // Scale the value of neurons that haven't been shut down
@@ -140,6 +139,14 @@ void Layer<T>::linear_backward(Matrix<T> dZ, Matrix<T> A_prev, T m) {
 // notice: the parameter dA come from last layer
 template <class T>
 void Layer<T>::linear_backward_activation(Matrix<T> dA, Matrix<T> Activation_cache, T m) {
+
+    if (this->use_dropout) {
+        // Apply mask Matrix to shut down the same neurons as during the forward proganation.
+        dA = dA * this->DL;
+        // Scale the value of neurons that haven't been shut down
+        dA = dA / keep_prob;
+    }
+
     if (this->activation == "sigmoid") {
         this->dZ = dA * Activation::deriv_sigmoid(Activation_cache);
     } else if (this->activation == "relu") {

@@ -93,6 +93,13 @@ class Matrix {
         Matrix<T> dot(const Matrix<T>& m) const;
         Matrix<T> divide(const T& value) const;
         Matrix<T> divide(const Matrix<T>& m) const;
+
+        Matrix<T> le(const T& value) const;
+        Matrix<T> lt(const T& value) const;
+        Matrix<T> ge(const T& value) const;
+        Matrix<T> gt(const T& value) const;
+        Matrix<T> eq(const T& value) const;
+
         // Get the transpose of Matrix
         Matrix<T> transpose() const;
 
@@ -126,6 +133,12 @@ template <class T> std::ostream& operator << (std::ostream& flux, const Matrix<T
 
 // connect 2 Matrices
 template <class T> Matrix<T> operator >> (const Matrix<T>& a, const Matrix<T>& b);
+
+template <class T> Matrix<T> operator < (const Matrix<T>& m, T v);
+template <class T> Matrix<T> operator <= (const Matrix<T>& m, T v);
+template <class T> Matrix<T> operator > (const Matrix<T>& m, T v);
+template <class T> Matrix<T> operator >= (const Matrix<T>& m, T v);
+template <class T> Matrix<T> operator == (const Matrix<T>& m, T v);
 
 #endif /* _MATRIX_H_ */
 
@@ -374,6 +387,36 @@ Matrix<T> Matrix<T>::dot(const Matrix<T>& m) const {
 }
 
 template <class T>
+Matrix<T> Matrix<T>::lt(const T& value) const {
+    std::function<T(T)> f = [value](T x) -> T { return x < value ? (T)1 : (T)0; };
+    return this->apply(f);
+}
+
+template <class T>
+Matrix<T> Matrix<T>::le(const T& value) const {
+    std::function<T(T)> f = [value](T x) -> T { return x <= value ? (T)1 : (T)0; };
+    return this->apply(f);
+}
+
+template <class T>
+Matrix<T> Matrix<T>::gt(const T& value) const {
+    std::function<T(T)> f = [value](T x) -> T { return x > value ? (T)1 : (T)0; };
+    return this->apply(f);
+}
+
+template <class T>
+Matrix<T> Matrix<T>::ge(const T& value) const {
+    std::function<T(T)> f = [value](T x) -> T { return x >= value ? (T)1 :(T)0; };
+    return this->apply(f);
+}
+
+template <class T>
+Matrix<T> Matrix<T>::eq(const T& value) const {
+    std::function<T(T)> f = [value](T x) -> T { return x == value ? (T)1 :(T)0; };
+    return this->apply(f);
+}
+
+template <class T>
 Matrix<T> Matrix<T>::join(const Matrix<T>& m) const {
     if (!(this->col_size == m.col_size))
         throw std::invalid_argument(" Fail to concat 2 matrices: The col_size are not same. ");
@@ -469,9 +512,7 @@ Matrix<T> Matrix<T>::to_random() {
 }
 
 template <class T>
-Matrix<T> operator + (const Matrix<T>& a, const Matrix<T>& b) {
-    return a.add(b);
-}
+Matrix<T> operator + (const Matrix<T>& a, const Matrix<T>& b) { return a.add(b); }
 
 template <class T>
 Matrix<T> operator + (const Matrix<T>& m, T a) {
@@ -484,14 +525,12 @@ Matrix<T> operator + (T a, const Matrix<T>& m) {
 }
 
 template <class T>
-Matrix<T> operator - (const Matrix<T>& a, const Matrix<T>& b) {
-    return a.sub(b);
-}
+Matrix<T> operator - (const Matrix<T>& a, const Matrix<T>& b) { return a.sub(b); }
 
 template <class T>
-Matrix<T> operator - (const Matrix<T>& m) {
+Matrix<T> operator - (const Matrix<T>& m) { 
     return m.apply([](T x) -> T { return -x; });
-}
+ }
 
 template <class T>
 Matrix<T> operator * (const Matrix<T>& m, T a) { return m.mul(a); }
@@ -500,21 +539,28 @@ template <class T>
 Matrix<T> operator * (T a, const Matrix<T>& m) { return m.mul(a); }
 
 template <class T>
-Matrix<T> operator * (const Matrix<T>& a, const Matrix<T>& b) {
-    return a.mul(b);
-}
+Matrix<T> operator * (const Matrix<T>& a, const Matrix<T>& b) { return a.mul(b); }
 
 template <class T>
-Matrix<T> operator / (const Matrix<T>& m, T a) {
-    return m.mul(T(1) / a);
-}
+Matrix<T> operator / (const Matrix<T>& m, T a) { return m.mul(T(1) / a); }
 
 template <class T>
-Matrix<T> operator / (const Matrix<T>& a, const Matrix<T>& b) {
-    return a.divide(b);
-}
+Matrix<T> operator / (const Matrix<T>& a, const Matrix<T>& b) { return a.divide(b); }
 
 template <class T>
-Matrix<T> operator >> (const Matrix<T>& a, const Matrix<T>& b) {
-    return a.join(b);
-}
+Matrix<T> operator >> (const Matrix<T>& a, const Matrix<T>& b) { return a.join(b); }
+
+template <class T> 
+Matrix<T> operator < (const Matrix<T>& m, T value) { return m.lt(value); }
+
+template <class T>
+Matrix<T> operator <= (const Matrix<T>& m, T value) { return m.le(value); }
+
+template <class T>
+Matrix<T> operator > (const Matrix<T>& m, T value) { return m.gt(value); }
+
+template <class T>
+Matrix<T> operator >= (const Matrix<T>& m, T value) { return m.ge(value); }
+
+template <class T>
+Matrix<T> operator == (const Matrix<T>& m, T value) { return m.eq(value); }

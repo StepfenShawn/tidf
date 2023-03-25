@@ -47,7 +47,7 @@ class Net {
         // ---------- Regularization ---------------
         void SetL2Regularization(double lambda);
         void SetL1Regularization(double lambda);
-        void Dropout(T keep_prob);
+        void Dropout(const T keep_prob);
         // -----------------------------------------
 
         void fit(long long iters);
@@ -98,7 +98,9 @@ Matrix<T> Net<T>::L2Regularization(T m, double lambda, Matrix<T> weights) {
 }
 
 template <class T>
-void Net<T>::Dropout(T keep_prob) {
+void Net<T>::Dropout(const T keep_prob) {
+    if (keep_prob < 0 || keep_prob > 1)
+        throw std::invalid_argument("Dropout level must be in interval [0, 1].");
     this->Layers.back().useDropout(keep_prob);
 }
 
