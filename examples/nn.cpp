@@ -17,6 +17,8 @@ int main() {
     net->addLayer< 4 >(LayerType::Dense, "tanh"); 
     net->addLayer< 1 >(LayerType::Dense, "sigmoid");
     net->compile("CrossEntropyLoss", "SGD");
+    // Show the config of the neural network
+    std::cout << net->get_config() << std::endl;
     net->fit(100000);
     std::cout << net->predict(
       MAT( double, ({{1.0}, {1.0}, {1.0}})) ) << std::endl;

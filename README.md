@@ -1,5 +1,5 @@
 # Tidf
-A tiny but fast deep-learning framework in c++.  
+A tiny, simple, stupid but powerful deep-learning framework in c++.  
 
 # Why Tidf?
 * Powerful: `Tidf` provides a Keras-like api.

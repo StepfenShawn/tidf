@@ -202,9 +202,13 @@ Matrix<T> Net<T>::predict(Matrix<T> inputs) {
 
 template <class T>
 std::string Net<T>::get_config() const {
-    return "Loss: " + this->loss + "\n" + 
-            "Optitimizer: " + this->optimizer + "\n" +
-            "Layer nums: " + std::to_string(this->Layers.size()) + "\n";
+    std::string info = "";
+    info += "Loss: " + this->loss + "\n"; 
+    info += "Optitimizer: " + this->optimizer + "\n";
+    info += "Layer nums: " + std::to_string(this->Layers.size()) + "\n";
+    for (auto layer : this->Layers)
+        info += layer.__str__();
+    return info;
 }
 
 #endif /* _NET_H_ */

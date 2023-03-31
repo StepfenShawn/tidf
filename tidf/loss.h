@@ -6,7 +6,6 @@
 namespace Loss {
     template <class T>
     Matrix<T> L1Loss(Matrix<T> x, Matrix<T> y) {
-        // assert(x.sameShape(y));
         T N = y.col_size;
         Matrix<T> sum(x.row_size, 1);
         sum.fill((T)0);

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <regex>
 
+// Load matrix from .txt file
 template <class T>
 Matrix<T> load_mat(std::string url) {
     std::vector<T> temp_line;

@@ -12,6 +12,7 @@
 #define randnum(a, b) (rand() % (b - a) + a)
 #define randint(a, b) (random() % (b - a) + a)
 #define random() (rand() / double(RAND_MAX))
+
 #define randmat(name, type, shape) \
     Matrix<type> name shape; \
     name = name.to_random()
@@ -57,7 +58,9 @@ class Matrix {
 
     public:
         std::vector<std::vector<T> > mat_arr;
+        // Height of the matrix
         int row_size;
+        // Width of the matrix
         int col_size;
         // Constructors
         Matrix<T>(int row_size, int col_size);
@@ -83,6 +86,7 @@ class Matrix {
 
         void __str__(std::ostream& flux) const;
 
+        // ------------------- Operators Part ------------------------------
         Matrix<T> add(const Matrix<T>& m) const;
         Matrix<T> sub(const Matrix<T>& m) const;
         // element-wise operation
@@ -99,10 +103,13 @@ class Matrix {
         Matrix<T> ge(const T& value) const;
         Matrix<T> gt(const T& value) const;
         Matrix<T> eq(const T& value) const;
+        // ------------------------------------------------------------------
 
         // Get the transpose of Matrix
         Matrix<T> transpose() const;
 
+        // Concat 2 matrices.
+        // The col_size must be the same.
         Matrix<T> join(const Matrix<T>& m) const;
 
         bool sameShape(const Matrix<T>& m) const;

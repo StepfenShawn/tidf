@@ -39,11 +39,13 @@ class Layer {
         Layer(LayerType type, int dims);
         Layer(LayerType type, int dims, std::string string);
 
+        // -------------------- Init -------------------------
         void initWeight(int row_size, int col_size);
         void initBias(int row_size, int col_size);
-
         void setInput(Matrix<T> input)   { this->input = input; }
         void setOutput(Matrix<T> output) { this->output = output; }
+        // ---------------------------------------------------
+        
         void useDropout(const T keep_prob) { 
             this->use_dropout = true;
             this->keep_prob = keep_prob; 
@@ -55,6 +57,7 @@ class Layer {
         void linear_backward(Matrix<T> dZ, Matrix<T> A_prev, T m);
         void linear_backward_activation(Matrix<T> dA, Matrix<T> A_prev, T m);
 
+        std::string __str__();
 };
 
 template <class T>
@@ -147,15 +150,20 @@ void Layer<T>::linear_backward_activation(Matrix<T> dA, Matrix<T> Activation_cac
         dA = dA / keep_prob;
     }
 
-    if (this->activation == "sigmoid") {
+    if (this->activation == "sigmoid")
         this->dZ = dA * Activation::deriv_sigmoid(Activation_cache);
-    } else if (this->activation == "relu") {
+    else if (this->activation == "relu")
         this->dZ = dA * Activation::deriv_relu(Activation_cache);
-    } else if (this->activation == "tanh") {
+    else if (this->activation == "tanh")
         this->dZ = dA * Activation::deriv_tanh(Activation_cache);
-    }
 
     this->linear_backward(this->dZ, this->input, m);
+}
+
+template <class T>
+std::string Layer<T>::__str__() {
+    return "Neurons: " + std::to_string(this->dims) + "\n" +   
+           "Type: " + "(" + std::to_string((int)this->type) + ")\n";
 }
 
 #endif /* _lAYER_H_ */
