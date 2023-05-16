@@ -91,6 +91,7 @@ void Layer<T>::initBias(int row_size, int col_size) {
     this->bias.fill((T)0);
 }
 
+// Calculate the "AL" on current layer.
 template <class T>
 Matrix<T> Layer<T>::linear_forward() {
     switch (this->type)
@@ -102,19 +103,20 @@ Matrix<T> Layer<T>::linear_forward() {
         default:
             break;
     }
+    Matrix<T> AL;
     if (this->use_dropout) {
         int col_size = this->Z.col_size;
         int row_size = this->Z.row_size;
         randmat(b, T, (row_size, col_size));
         this->DL = b < this->keep_prob;
         // Shut down some neurons of A[l]
-        Matrix<T> AL = this->linear_forward_activation(this->Z) * DL;
+        AL = this->linear_forward_activation(this->Z) * DL;
         // Scale the value of neurons that haven't been shut down
         AL = AL / this->keep_prob;
-        return AL;
     }
     else
-        return this->linear_forward_activation(this->Z);
+        AL = this->linear_forward_activation(this->Z);
+    return AL;
 }
 
 template <class T>
